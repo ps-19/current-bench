@@ -3,7 +3,7 @@
 # OCaml - Continuous benchmarks
 
 Prototype for running predictable, IO-bound benchmarks in an ocurrent pipeline. This is *work in progress*.
-If you want to be on the allowlist for running benchmarks for your repository, please contact @gs0510, or you can open an issue.
+If you want to be on the allowlist for running benchmarks for your repository, please contact [Gargi Sharma](https://github.com/gs0510), or you can open an [issue](https://github.com/ocurrent/current-bench/issues).
 
 ## Enroll your project
 
@@ -12,7 +12,8 @@ If you want to enroll your repository or setup this benchmark repository for you
 1. There is a `make bench` target which can run the benchmarks.
 2. The benchmarks result is a JSON object of the following format:
 
-```bash
+```
+bash
 {
   "name": <optional-name-of-the-benchmark>,
   "config": <optional-config-object>,
@@ -32,7 +33,7 @@ If you want to enroll your repository or setup this benchmark repository for you
 }
 ```
 
-[Here's](https://gist.github.com/gs0510/9ef5d47582b7fbf8dda6df0af08537e4) an example from [index](https://github.com/mirage/index) with regards to what the format looks like.
+[Here](https://gist.github.com/gs0510/9ef5d47582b7fbf8dda6df0af08537e4) is an example from [index](https://github.com/mirage/index) with regards to what the format looks like.
 
 The metadata about `repo`, `branch` and `commit` is added by the pipeline.
 
@@ -44,7 +45,7 @@ Multiple concatenated JSON objects can be produced and will be interpreted as di
 
 ### Using API to submit benchmark data
 
-Benchmarks data could also be added directly to the DB without having
+Benchmarks data could also be added directly to the database without having
 `current-bench` running the benchmarks using a HTTP end-point.
 
 ```sh
@@ -92,7 +93,7 @@ curl -X POST -H 'Authorization: Bearer <token>' <scheme>://<host>/benchmarks/met
 ## Data dependencies in your project
 
 If you have a data dependency, then currently we add the dependency to the docker volume called `current-bench-data`.
-The dependency lives in `<org_name>/<repo_name>` folder so you can assume the depdency to live in `current-bench-data/<org_name>/<repo_name>` folder.
+The dependency lives in `<org_name>/<repo_name>` folder so you can assume the dependency to live in `current-bench-data/<org_name>/<repo_name>` folder.
 
 ## Tuning the environment
 
@@ -100,25 +101,25 @@ See general instructions in [ocaml-bench-scripts](https://github.com/ocaml-bench
 
 Use the `—docker-cpu` parameter to pin the benchmark to a single CPU. This will pass the `—cpuset-cpus` parameter to Docker behind the scenes to run the container on a single core.
 
-The main difference from the scripts hosted in [ocaml-bench-scripts](https://github.com/ocaml-bench/ocaml_bench_scripts/) and this ocurrent pipeline is that the tasks will be executed inside docker containers. This requires a few more adjustments to how the containers are launched. Most of this is handled automatically by the pipeline by passing parameters to Docker. Some additional details are documented below.
+The main difference from the scripts hosted in [ocaml-bench-scripts](https://github.com/ocaml-bench/ocaml_bench_scripts/) and this ocurrent pipeline is that the tasks will be executed inside docker containers. This requires a few more adjustments to how the containers are launched. Most of this is handled automatically by the pipeline, by passing parameters to the Docker. Some additional details are documented below.
 
 
 ## IO performance
 
 The results of IO bound benchmarks can vary greatly between different device/storage types and how they are configured. For this prototype we’re aiming for predictable results so we are using an in-memory `tmpfs` partition in `/dev/shm` for all storage.
 
-The `—docker-shm-size` parameter can be passed to the pipeline to adjust the size of the `tmpfs` partition. The default is 4G.
+The `—docker-shm-size` parameter can be passed to the pipeline to adjust the size of the `tmpfs` partition. The default is 4GB.
 
-`tmpfs` partitions are similar to `ramfs` partitions in that the content will be stored entirely in internal kernel cache, but they have a size limitation and may trigger swapping. It is therefore important to make sure that the system is configured in such a way that swapping doesn’t occur while the benchmark is running. For more details about `tmpfs`/`ramfs` see https://www.kernel.org/doc/Documentation/filesystems/tmpfs.txt.
+`tmpfs` partitions are similar to `ramfs` partitions in that the content will be stored entirely in internal kernel cache, but they have a size limitation and may trigger swapping. It is therefore important to make sure that the system is configured in such a way that swapping doesn’t occur while the benchmark is running. For more details about `tmpfs`/`ramfs` see [here](https://www.kernel.org/doc/Documentation/filesystems/tmpfs.txt).
 
 
 ## NUMA considerations
 
-If running on a system with NUMA enabled the `tmpfs` file system should be allocated in a memory area that is local to the core running the benchmark. Otherwise the kernel could allocate this in different areas over time and affect the IO performance results. To avoid this issue, the `tmpfs` volume can be created with a specific memory allocation policy.
+If running on a system with NUMA enabled the `tmpfs` file system should be allocated in a memory area that is local to the core running the benchmark. Otherwise, the kernel could allocate this in different areas over time and affect the IO performance results. To avoid this issue, the `tmpfs` volume can be created with a specific memory allocation policy.
 
 The pipeline provides a `—docker-numa-node` command line parameter that forces the `tmpfs` volume in `/dev/shm` to be allocated from a specific NUMA node. `lscpu` shows which NUMA nodes are local to each core.
 
-NOTE: Although it should be possible to get good results on a NUMA enabled system, we do not plan to use this in production and have limited experience with it. The main reason is that the system wide optimisations required would likely reduce performance for general tasks, while the benchmark itself only runs on a single core. This makes it more suitable to run on a dedicated, smaller server, which typically has less memory and doesn’t require NUMA.
+NOTE: Although it should be possible to get good results on a NUMA enabled system, we do not plan to use this in production and have limited experience with it. The main reason is that the required system wide optimisations may reduce the performance for general tasks, while the benchmark itself only runs on a single core. This makes it more suitable to run on a dedicated, smaller server, which typically has less memory and do not require NUMA.
 
 
 ## ASLR
